@@ -10,4 +10,5 @@ from itemadapter import ItemAdapter
 
 class WebCrawlerPipeline:
     def process_item(self, item, spider):
+        # Item treatment
         return item
