@@ -1,0 +1,26 @@
+-> Gestion des erreurs d'accès [WIP]
+    - 500 : Internal Server Error
+    - 502 : Bad Gateway
+    - 503 : Service Unavailable
+    - 504 : Gateway Timeout
+    - 403 : Forbidden
+    - 404 : Not Found
+    - 406 : Not Acceptable
+    - 408 : Request Timeout
+    - 429 : Too Many Requests
+    - 301 : Moved Permanently
+    - 302 : Found (redirection)
+    - 307 : Temporary Redirect
+
+-> Une fois les fonctions de gestion d'erreurs faites
+    -> Mettre les fonctions dans un fichier http_errors.py
+
+-> Une fois les liens récupérés, les stocker.
+    -> Chaque liens doit y figurer qu'une seule fois et ne fois pas être dans failed_urls
+        -> Établir des tests
+
+-> Une fois les liens stockés, les écrire dans un fichier local pour simuler un futur bucket S3
+
+-> Une fois le programme fonctionnel sur le domaine lemonde.fr, généraliser à d'autres start_urls
+
+
