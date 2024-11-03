@@ -1,7 +1,7 @@
 import scrapy
 import logging
 from urllib.parse import urlparse
-#from web_crawler.items import WebCrawlerItem
+from ..items import WebCrawlerItem
 
 
 class WebCrawlerSpider(scrapy.Spider):
@@ -14,8 +14,14 @@ class WebCrawlerSpider(scrapy.Spider):
         #self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
 
     def parse(self, response):
-        self.log(f"Visited URL: {response.url}")  # Affiche l'URL visitée
-        self.log(f"HTML content: {response.text[:200]}")  # Affiche les 200 premiers caractères du contenu HTML
+        self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
+
+        # Création de l'item en remplissant les champs
+        item = WebCrawlerItem()
+        item['url'] = response.url
+        item['content'] = response.css('body').get()[:200]  # Récupère le début du contenu html du body,
+        # il sera optimisé plus tard
+        yield item
 
         links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
 
