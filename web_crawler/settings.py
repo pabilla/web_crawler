@@ -20,17 +20,24 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True  # Added to respect the site's robots.txt file
 
+# Retries configuration
+RETRY_ENABLED = True
 RETRY_TIMES = 5  # Number of unsuccessful attempts before considering the link dead
-RETRY_HTTP_CODES = [301, 302, 307, 500, 502, 503, 504, 408, 429]
+RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
 DOWNLOAD_DELAY = 1  # 1-second delay to avoid "too many requests" (429)
 CONCURRENT_REQUESTS = 10
 # Override the default request headers (Error 406):
 DEFAULT_REQUEST_HEADERS = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'en',
-    'Referer': 'https://www.google.com/',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    #'Referer': 'https://www.google.com/',
     'Cache-Control': 'no-cache',
     'Pragma': 'no-cache',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                  'Chrome/87.0.4280.88 Safari/537.36',
 }
 LOG_LEVEL = 'DEBUG'  # Log level to see more details when debugging
 # Once in prod, change to 'INFO' or 'WARNING'
@@ -49,15 +56,39 @@ LOG_LEVEL = 'DEBUG'  # Log level to see more details when debugging
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
-    'web_crawler.middlewares.ErrorHandlingMiddleware': 543,
+    # Désactivez le HttpErrorMiddleware si nécessaire pour éviter des conflits
+    'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware': None,
+
+    # Gardez les autres spiders middlewares nécessaires
+    'scrapy.spidermiddlewares.referer.RefererMiddleware': 700,
+    'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware': 800,
+    'scrapy.spidermiddlewares.depth.DepthMiddleware': 900,
 }
 
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "web_crawler.middlewares.WebCrawlerDownloaderMiddleware": 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    # Désactivez le RetryMiddleware par défaut
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+
+    # Activez votre middleware personnalisé à une priorité appropriée
+    'web_crawler.middlewares.ErrorHandlingMiddleware': 550,
+
+    # Gardez les autres middlewares nécessaires
+    'scrapy.downloadermiddlewares.offsite.OffsiteMiddleware': 100,
+    'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 200,
+    'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
+    'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
+    'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 600,
+    'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 700,
+    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 800,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
+    'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': 650,
+    'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html

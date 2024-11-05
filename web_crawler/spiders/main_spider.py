@@ -7,20 +7,32 @@ from ..items import WebCrawlerItem
 class WebCrawlerSpider(scrapy.Spider):
     name = 'web_crawler'
     allowed_domains = ['lemonde.fr']  # (Pour l'instant)
-    #start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
+    start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
 
-    start_urls = ['https://httpstat.us/200',  # URL valide code 200
-                  'https://httpstat.us/404',  # URL avec code 404 pour tester la gestion d'une page non trouvée
-                  'https://httpstat.us/403',  # URL avec code 403 pour tester l'accès refusé
-                  'https://httpstat.us/500',  # URL avec code 500 pour tester une erreur serveur
-                  'https://httpstat.us/504',  # URL avec code 504 pour tester une erreur de timeout
-                  'https://httpstat.us/408'  # URL avec code 408 pour tester Request Timeout
-    ]
+    # start_urls = [
+    #     'https://httpstat.us/200',  # URL valide code 200
+    #     'https://httpstat.us/404',  # URL avec code 404 pour tester la gestion d'une page non trouvée
+    #     'https://httpstat.us/403',  # URL avec code 403 pour tester l'accès refusé
+    #     'https://httpstat.us/500',  # URL avec code 500 pour tester une erreur serveur
+    #     'https://httpstat.us/502',  # URL avec code 502 pour tester Bad Gateway
+    #     'https://httpstat.us/503',  # URL avec code 503 pour tester Service Unavailable
+    #     'https://httpstat.us/504',  # URL avec code 504 pour tester une erreur de timeout
+    #     'https://httpstat.us/406',  # URL avec code 406 pour tester Not Acceptable
+    #     'https://httpstat.us/408',  # URL avec code 408 pour tester Request Timeout
+    #     'https://httpstat.us/429'   # URL avec code 429 pour tester Too Many Requests
+    # ]
 
     def __init__(self, *args, **kwargs):
         super(WebCrawlerSpider, self).__init__(*args, **kwargs)
-        #self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
-        #Pas nécessaire ici, car dans le middleware.py
+        self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
+
+    def start_requests(self):
+        for url in self.start_urls:
+            yield scrapy.Request(
+                url=url,
+                callback=self.parse,
+                dont_filter=True  # Pour éviter que les URLs soient filtrées par dupliquées
+            )
 
     def parse(self, response):
         self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
@@ -49,7 +61,8 @@ class WebCrawlerSpider(scrapy.Spider):
                 )
 
     def closed(self, reason):
-        failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
-        self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
-
-
+        if self.failed_urls:
+            failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
+            self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
+        else:
+            self.log("No failed URLs.", level=logging.DEBUG)
