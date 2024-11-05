@@ -38,12 +38,12 @@ class ErrorHandlingMiddleware:
 
         if isinstance(exception, HttpError):
             # On récupère le code d'erreur HTTP et on le vérifie
-            code = exception.value.response.status
+            code = exception.response.status
             if code in [404, 403]:
                 spider.logger.warning(f"Error {code} for {url}. Added to failed_urls list.")
-                # Ajoute l'URL à la liste des pages à exclure
+                # Ajoute le tuple (url, code d'erreur) à la liste des pages à exclure
                 if url not in spider.failed_urls:
-                    spider.failed_urls.append(url)
+                    spider.failed_urls.append((url, code))
                 return []  # Sort immédiatement après avoir capturé les erreurs 403 et 404
             else:
                 # Gère les autres erreurs HTTP (500, 502, ...) si besoin
@@ -52,19 +52,27 @@ class ErrorHandlingMiddleware:
         # Gère d'autres types d'erreurs
         elif isinstance(exception, ConnectionRefusedError):
             spider.logger.error(f"Connection refused for {url}.")
+            if (url, 'Connection refused') not in spider.failed_urls:
+                spider.failed_urls.append((url, 'Connection Refused'))
 
         elif isinstance(exception, DNSLookupError):
             spider.logger.error(f"DNS lookup failed for {url}.")
+            if (url, 'DNS Lookup Failed') not in spider.failed_urls:
+                spider.failed_urls.append((url, 'DNS Lookup Failed'))
 
         elif isinstance(exception, (TimeoutError, TCPTimedOutError)):
             spider.logger.error(f"Timeout occurred for {url}.")
+            if (url, 'Timeout') not in spider.failed_urls:
+                spider.failed_urls.append((url, 'Timeout'))
 
         else:
             # Gère toutes les autres exceptions
             spider.logger.error(f"Other error occurred for {url}: {exception}")
+            if (url, 'Other Error') not in spider.failed_urls:
+                spider.failed_urls.append((url, 'Other Error'))
 
         # Ajoute l'URL à la liste si ça échoue définitivement
-        if url not in spider.failed_urls:
-            spider.failed_urls.append(url)
+        #if url not in spider.failed_urls :
+        #    spider.failed_urls.append(url)
 
         return []  # Indique à Scrapy que l'exception a été traitée
