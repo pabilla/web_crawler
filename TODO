@@ -8,9 +8,6 @@
     - 406 : Not Acceptable
     - 408 : Request Timeout
     - 429 : Too Many Requests
-    - 301 : Moved Permanently
-    - 302 : Found (redirection)
-    - 307 : Temporary Redirect
 
 -> Une fois les fonctions de gestion d'erreurs faites
     -> Mettre les fonctions dans un fichier http_errors.py

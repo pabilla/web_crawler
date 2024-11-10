@@ -3,76 +3,72 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+
 import logging
 from scrapy import signals
+from scrapy.exceptions import IgnoreRequest
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
+from scrapy.utils.response import response_status_message
 from twisted.internet.error import (
     DNSLookupError,
     TimeoutError,
     TCPTimedOutError,
     ConnectionRefusedError,
 )
-from scrapy.spidermiddlewares.httperror import HttpError
-# useful for handling different item types with a single interface
-from itemadapter import is_item, ItemAdapter
+from twisted.web._newclient import ResponseFailed
 
 
-class ErrorHandlingMiddleware:
+class ErrorHandlingMiddleware(RetryMiddleware):
+    def __init__(self, settings):
+        super(ErrorHandlingMiddleware, self).__init__(settings)
 
     @classmethod
     def from_crawler(cls, crawler):
-        # Méthode de classe utilisée par Scrapy pour créer vos middlewares
-        s = cls()
-        # Connexion au signal 'spider_opened' pour initialiser 'failed_urls' quand le spider démarre
-        crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
-        return s
+        return cls(crawler.settings)
 
-    def spider_opened(self, spider):
-        # Initialise la liste des URLs échouées lorsque le spider est ouvert
-        spider.failed_urls = []
+    def process_response(self, request, response, spider):
+        # Codes d'erreur à gérer immédiatement (sans réessai)
+        immediate_error_codes = [403, 404, 406]
+        # Codes d'erreur à gérer avec réessai
+        retry_error_codes = [500, 502, 503, 504, 408, 429]
 
-    def process_spider_exception(self, response, exception, spider):
-        """
-        Cette fonction est appelée lorsqu'une exception est levée dans le spider.
-        """
-        url = response.url
+        if response.status in immediate_error_codes:
+            if (response.url, response.status) not in spider.failed_urls:
+                spider.failed_urls.append((response.url, response.status))
+                spider.logger.warning(f"HTTP Error {response.status} for {response.url}. Added to failed_urls list.")
+            raise IgnoreRequest()
 
-        if isinstance(exception, HttpError):
-            # On récupère le code d'erreur HTTP et on le vérifie
-            code = exception.response.status
-            if code in [404, 403]:
-                spider.logger.warning(f"Error {code} for {url}. Added to failed_urls list.")
-                # Ajoute le tuple (url, code d'erreur) à la liste des pages à exclure
-                if url not in spider.failed_urls:
-                    spider.failed_urls.append((url, code))
-                return []  # Sort immédiatement après avoir capturé les erreurs 403 et 404
+        elif response.status in retry_error_codes:
+            reason = response_status_message(response.status)
+            retries = request.meta.get('retry_times', 0)
+            if retries < self.max_retry_times:
+                spider.logger.info(
+                    f"HTTP Error {response.status} for {response.url}. Retrying ({retries + 1}/{self.max_retry_times})...")
+                return self._retry(request, reason, spider) or response
             else:
-                # Gère les autres erreurs HTTP (500, 502, ...) si besoin
-                spider.logger.info(f"HTTP Error {code} for {url}. Retry in progress.")
+                if (response.url, response.status) not in spider.failed_urls:
+                    spider.failed_urls.append((response.url, response.status))
+                    spider.logger.warning(
+                        f"HTTP Error {response.status} for {response.url} after {retries} retries. Added to failed_urls list.")
+                raise IgnoreRequest()
 
-        # Gère d'autres types d'erreurs
-        elif isinstance(exception, ConnectionRefusedError):
-            spider.logger.error(f"Connection refused for {url}.")
-            if (url, 'Connection refused') not in spider.failed_urls:
-                spider.failed_urls.append((url, 'Connection Refused'))
+        # Pour toutes les autres réponses, les laisser passer normalement
+        return response
 
-        elif isinstance(exception, DNSLookupError):
-            spider.logger.error(f"DNS lookup failed for {url}.")
-            if (url, 'DNS Lookup Failed') not in spider.failed_urls:
-                spider.failed_urls.append((url, 'DNS Lookup Failed'))
-
-        elif isinstance(exception, (TimeoutError, TCPTimedOutError)):
-            spider.logger.error(f"Timeout occurred for {url}.")
-            if (url, 'Timeout') not in spider.failed_urls:
-                spider.failed_urls.append((url, 'Timeout'))
-
-        else:
-            # Gère toutes les autres exceptions
-            spider.logger.error(f"Other error occurred for {url}: {exception}")
-            if (url, 'Other Error') not in spider.failed_urls:
-                spider.failed_urls.append((url, 'Other Error'))
-
-        # Ajoute l'URL à la liste si ça échoue définitivement
-        #if url not in spider.failed_urls :
-        #    spider.failed_urls.append(url)
-
-        return []  # Indique à Scrapy que l'exception a été traitée
+    def process_exception(self, request, exception, spider):
+        # Gestion des exceptions réseau et de connexion
+        if isinstance(exception,
+                      (TimeoutError, TCPTimedOutError, DNSLookupError, ConnectionRefusedError, ResponseFailed)):
+            retries = request.meta.get('retry_times', 0)
+            if retries < self.max_retry_times:
+                spider.logger.info(
+                    f"Exception {type(exception).__name__} for {request.url}. Retrying ({retries + 1}/{self.max_retry_times})...")
+                return self._retry(request, exception, spider)
+            else:
+                error_type = type(exception).__name__
+                if (request.url, error_type) not in spider.failed_urls:
+                    spider.failed_urls.append((request.url, error_type))
+                    spider.logger.error(
+                        f"Exception {error_type} for {request.url} after {retries} retries. Added to failed_urls list.")
+        # Pour toutes les autres exceptions, les laisser passer normalement
+        return None
