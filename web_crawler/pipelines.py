@@ -6,9 +6,21 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
+from scrapy.exceptions import DropItem
+from web_crawler.spiders.file_savers import fileSaverFactory
+from scrapy.utils.project import get_project_settings
 
 
 class WebCrawlerPipeline:
+    def __init__(self):
+        settings = get_project_settings()
+        file_saver_config = settings.get("FILESAVER_CONFIG")
+        self.file_saver = fileSaverFactory(file_saver_config)
+
     def process_item(self, item, spider):
-        # Item treatment
-        return item
+        # Enregistrer chaque item sous forme de dictionnaire JSON
+        if 'content' in item and 'url' in item:
+            self.file_saver.save({"url": item['url'], "content": item['content']})
+            return item
+        else:
+            raise DropItem("Item with missing informations")

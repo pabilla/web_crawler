@@ -14,8 +14,8 @@ NEWSPIDER_MODULE = "web_crawler.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 ' \
-             'Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 ' \
+             'Safari/537.36 Edg/130.0.0.0'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True  # Added to respect the site's robots.txt file
@@ -26,19 +26,15 @@ RETRY_TIMES = 5  # Number of unsuccessful attempts before considering the link d
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
 DOWNLOAD_DELAY = 1  # 1-second delay to avoid "too many requests" (429)
 CONCURRENT_REQUESTS = 10
+
 # Override the default request headers (Error 406):
 DEFAULT_REQUEST_HEADERS = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'Accept-Language': 'fr,fr-FR;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+    'User-Agent': USER_AGENT,
     'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-    #'Referer': 'https://www.google.com/',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                  'Chrome/87.0.4280.88 Safari/537.36',
 }
+
 LOG_LEVEL = 'DEBUG'  # Log level to see more details when debugging
 # Once in prod, change to 'INFO' or 'WARNING'
 
@@ -56,10 +52,8 @@ LOG_LEVEL = 'DEBUG'  # Log level to see more details when debugging
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
-    # Désactivez le HttpErrorMiddleware si nécessaire pour éviter des conflits
     'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware': None,
 
-    # Gardez les autres spiders middlewares nécessaires
     'scrapy.spidermiddlewares.referer.RefererMiddleware': 700,
     'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware': 800,
     'scrapy.spidermiddlewares.depth.DepthMiddleware': 900,
@@ -69,13 +63,9 @@ SPIDER_MIDDLEWARES = {
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    # Désactivez le RetryMiddleware par défaut
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
 
-    # Activez votre middleware personnalisé à une priorité appropriée
     'web_crawler.middlewares.ErrorHandlingMiddleware': 550,
-
-    # Gardez les autres middlewares nécessaires
     'scrapy.downloadermiddlewares.offsite.OffsiteMiddleware': 100,
     'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 200,
     'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
@@ -127,3 +117,12 @@ ITEM_PIPELINES = {
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
+
+
+# Saving type : local or s3
+FILESAVER_CONFIG = {
+    "type": "local",  # local or s3
+    "directory_path": "./web_crawler",  # local path
+    "filename": "data.json"
+    #"s3_bucket" : "my_bucket"  # s3 parameters
+}
