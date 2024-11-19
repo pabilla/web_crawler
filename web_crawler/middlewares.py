@@ -26,6 +26,13 @@ class ErrorHandlingMiddleware(RetryMiddleware):
     def from_crawler(cls, crawler):
         return cls(crawler.settings)
 
+    def process_request(self, request, spider):
+        # Évite de refaire une requête pour les URLs déjà définie dans failed
+        if request.url in {url for url, _ in spider.failed_urls}:
+            spider.logger.debug(f"Skipping failed URL {request.url}")
+            raise IgnoreRequest()
+        return None
+
     def process_response(self, request, response, spider):
         # Codes d'erreur à gérer immédiatement (sans réessai)
         immediate_error_codes = [403, 404, 406]
