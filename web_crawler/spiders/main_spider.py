@@ -1,6 +1,10 @@
 import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
 import logging
 from urllib.parse import urlparse
+from readability import Document
+from bs4 import BeautifulSoup
 from ..items import WebCrawlerItem
 
 
@@ -22,6 +26,27 @@ class WebCrawlerSpider(scrapy.Spider):
     #     'https://httpstat.us/429'   # URL avec code 429 pour tester Too Many Requests
     # ]
 
+    rules = (
+        Rule(
+            LinkExtractor(
+                deny_extensions=['txt', 'xml', 'pdf', 'zip'],  # Exclusions de certaines extensions
+                deny=(
+                    r'/robots\.txt$',
+                    r'/sitemap\.xml$',
+                    r'/sfuser/.*',
+                    r'/connexion$',
+                    r'/inscription$',
+                    r'/mentions-legales$',
+                    r'/aide$',
+                    r'/faq$',
+                    r'/infolettres$',
+                )
+            ),
+            callback='parse_item',
+            follow=True
+        ),
+    )
+
     def __init__(self, *args, **kwargs):
         super(WebCrawlerSpider, self).__init__(*args, **kwargs)
         self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
@@ -37,12 +62,19 @@ class WebCrawlerSpider(scrapy.Spider):
     def parse(self, response):
         self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
 
-        # Création de l'item en remplissant les champs
-        item = WebCrawlerItem()
-        item['url'] = response.url
-        item['content'] = response.css('body').get()[:200]  # Récupère le début du contenu html du body,
-        # il sera optimisé plus tard
-        yield item
+        doc = Document(response.text, url=response.url)
+        html_content = doc.summary()  # Récupère le contenu html
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+        content = soup.get_text(separator='\n', strip=True)  # Nettoie le contenu
+        content = content.replace('\u00A0', ' ')  # Pour les espaces spéciaux [NBSP]
+
+        if content and content.strip():
+            item = WebCrawlerItem()
+            item['url'] = response.url
+            item['content'] = content
+            # il sera optimisé plus tard
+            yield item
 
         links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
 

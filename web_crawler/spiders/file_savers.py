@@ -30,16 +30,16 @@ class LocalFileSaver(FileSaver):
         self.filepath = os.path.join(directory_path, filename)
         os.makedirs(directory_path, exist_ok=True)
         # Initialiser le fichier JSON vide au début du crawl
-        with open(self.filepath, 'w') as file:
+        with open(self.filepath, 'w', encoding='utf-8') as file:
             json.dump([], file)
 
     def save(self, item):
 
-        with open(self.filepath, 'r+') as file:
+        with open(self.filepath, 'r+', encoding='utf-8') as file:
             file_data = json.load(file)
             file_data.append(item)
             file.seek(0)
-            json.dump(file_data, file, indent=4)
+            json.dump(file_data, file, indent=4, ensure_ascii=False)
         print(f"Item saving in {self.filepath}.")
 
 
