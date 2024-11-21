@@ -19,8 +19,8 @@ class WebCrawlerPipeline:
 
     def process_item(self, item, spider):
         # Enregistrer chaque item sous forme de dictionnaire JSON
-        if 'content' in item and 'url' in item:
-            self.file_saver.save({"url": item['url'], "content": item['content']})
+        if 'title' in item and 'url' in item and 'content' in item:
+            self.file_saver.save({"title": item['title'], "url": item['url'], "content": item['content']})
             return item
         else:
             raise DropItem("Item with missing informations")

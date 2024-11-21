@@ -3,11 +3,29 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import logging
 from urllib.parse import urlparse
-from readability import Document
-from bs4 import BeautifulSoup
-import html2text
-import requests
+import re
 from ..items import WebCrawlerItem
+
+
+EXCLUDE_KEYWORDS = [
+    'header', 'footer', 'nav', 'aside', 'navigation',
+    'sidebar', 'ads', 'advertisement', 'schema',
+    'jsonld', 'ld+json', 'microdata', 'structured-data'
+]
+
+
+# Gère les balises à exclure lors de la récupération du code html
+def build_xpath_exclusions(keywords):
+    exclusions = []
+    for keyword in keywords:
+        exclusions.append(
+            f'not(ancestor::*[contains(translate(@id, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "{keyword}")])'
+        )
+        exclusions.append(
+            f'not(ancestor::*[contains(translate(@class, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "{keyword}")])'
+        )
+    return ' and '.join(exclusions)
+
 
 
 class WebCrawlerSpider(scrapy.Spider):
@@ -64,11 +82,26 @@ class WebCrawlerSpider(scrapy.Spider):
     def parse(self, response):
         self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
 
-        content = requests.get(response.url).content
-        content = html2text.html2text(str(content))
+        title = response.xpath('//title/text()').get(default='').strip()
+        title = title.replace("\xa0", " ")
+
+        # Construire dynamiquement les exclusions
+        exclusions = build_xpath_exclusions(EXCLUDE_KEYWORDS)
+
+        # Expression XPath pour extraire le texte du body en excluant les éléments indésirables
+        xpath_expression = f'//body//text()[{exclusions}]'
+
+        texts = response.xpath(xpath_expression).getall()
+
+        # Joindre les textes extraits en une seule chaîne
+        content = ' '.join(texts).strip()
+        content = content.replace("\xa0", " ")  # NBSP
+        content = ' '.join(content.split())
+
 
         if content and content.strip():
             item = WebCrawlerItem()
+            item['title'] = title
             item['url'] = response.url
             item['content'] = content
             yield item
@@ -95,9 +128,6 @@ class WebCrawlerSpider(scrapy.Spider):
             self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
         else:
             self.log("No failed URLs.", level=logging.DEBUG)
-
-
-
 
         # doc = Document(response.text, url=response.url)
         # html_content = doc.summary()  # Récupère le contenu html
