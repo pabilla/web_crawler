@@ -5,24 +5,15 @@
     - 504 : Gateway Timeout
     - 403 : Forbidden
     - 404 : Not Found
-    - 406 : Not Acceptable
+    - 406 : Not Acceptable [Last to do]
     - 408 : Request Timeout
     - 429 : Too Many Requests
 
--> Une fois les fonctions de gestion d'erreurs faites
-    -> Mettre les fonctions dans un fichier http_errors.py
-
--> Une fois les liens récupérés, les stocker.
-    -> Chaque liens doit y figurer qu'une seule fois et ne fois pas être dans failed_urls
-        -> Établir des tests de vérification (appeler directement un lien inaccessible)
-    --> Ajouter le code d'erreur devant chaque lien dans failed_urls pour comprendre pourquoi il est là
-
--> Une fois les liens stockés, les écrire dans un fichier local pour simuler un futur bucket S3
-        --> Créer des classes abstraites (pour local et S3) afin de pouvoir seulement modifier le chemin dans les paramètres
-
 -> Ajouter des tests unitaires (Si on a le temps)
 
--> Une fois le programme fonctionnel sur le domaine lemonde.fr, généraliser à d'autres start_urls
+-> Scraper le body html dans le content
+-> Add a title to the item
+-> Initier la connexion avec le S3
 
 
 

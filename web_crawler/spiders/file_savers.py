@@ -4,12 +4,14 @@ import json
 import os
 import boto3
 
+
 # Classe abstraite pour la sauvegarde des fichiers
 class FileSaver(abc.ABC):
     @abc.abstractmethod
     def save(self, filepath: str, data: str):
         """Méthode abstraite pour sauvegarder des données dans un fichier."""
         pass
+
 
 # Save s3
 class S3FileSaver(FileSaver):
@@ -23,6 +25,7 @@ class S3FileSaver(FileSaver):
         s3_client.put_object(Bucket=self.s3_bucket, Key=filepath, Body=data)
         print(f"Saving of {filepath} in S3 bucket '{self.s3_bucket}'.")
 
+
 # Save locale
 class LocalFileSaver(FileSaver):
     def __init__(self, directory_path: str, filename="data.json"):
@@ -34,7 +37,6 @@ class LocalFileSaver(FileSaver):
             json.dump([], file)
 
     def save(self, item):
-
         with open(self.filepath, 'r+', encoding='utf-8') as file:
             file_data = json.load(file)
             file_data.append(item)

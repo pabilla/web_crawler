@@ -35,7 +35,7 @@ DEFAULT_REQUEST_HEADERS = {
     'Connection': 'keep-alive',
 }
 
-LOG_LEVEL = 'DEBUG'  # Log level to see more details when debugging
+LOG_LEVEL = 'INFO'  # Log level to see more details when debugging
 # Once in prod, change to 'INFO' or 'WARNING'
 
 

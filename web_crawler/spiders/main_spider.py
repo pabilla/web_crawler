@@ -5,6 +5,8 @@ import logging
 from urllib.parse import urlparse
 from readability import Document
 from bs4 import BeautifulSoup
+import html2text
+import requests
 from ..items import WebCrawlerItem
 
 
@@ -62,18 +64,13 @@ class WebCrawlerSpider(scrapy.Spider):
     def parse(self, response):
         self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
 
-        doc = Document(response.text, url=response.url)
-        html_content = doc.summary()  # Récupère le contenu html
-
-        soup = BeautifulSoup(html_content, 'html.parser')
-        content = soup.get_text(separator='\n', strip=True)  # Nettoie le contenu
-        content = content.replace('\u00A0', ' ')  # Pour les espaces spéciaux [NBSP]
+        content = requests.get(response.url).content
+        content = html2text.html2text(str(content))
 
         if content and content.strip():
             item = WebCrawlerItem()
             item['url'] = response.url
             item['content'] = content
-            # il sera optimisé plus tard
             yield item
 
         links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
@@ -98,3 +95,13 @@ class WebCrawlerSpider(scrapy.Spider):
             self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
         else:
             self.log("No failed URLs.", level=logging.DEBUG)
+
+
+
+
+        # doc = Document(response.text, url=response.url)
+        # html_content = doc.summary()  # Récupère le contenu html
+        #
+        # soup = BeautifulSoup(html_content, 'html.parser')
+        # content = soup.get_text(separator='\n', strip=True)  # Nettoie le contenu
+        # content = content.replace('\u00A0', ' ')  # Pour les espaces spéciaux [NBSP]
