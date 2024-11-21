@@ -11,8 +11,12 @@
 
 -> Ajouter des tests unitaires (Si on a le temps)
 
--> Scraper le body html dans le content
--> Add a title to the item
+-> Où est passer la failed_url
+
+-> créer un autre fichier json avec les failed_urls pour qu'ils restent enregistré
+    et qu'ils ne tente jamais d'y retourner
+
+
 -> Initier la connexion avec le S3
 
 

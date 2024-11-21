@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 import re
 from ..items import WebCrawlerItem
 
-
 EXCLUDE_KEYWORDS = [
     'header', 'footer', 'nav', 'aside', 'navigation',
     'sidebar', 'ads', 'advertisement', 'schema',
@@ -25,7 +24,6 @@ def build_xpath_exclusions(keywords):
             f'not(ancestor::*[contains(translate(@class, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "{keyword}")])'
         )
     return ' and '.join(exclusions)
-
 
 
 class WebCrawlerSpider(scrapy.Spider):
@@ -80,30 +78,22 @@ class WebCrawlerSpider(scrapy.Spider):
             )
 
     def parse(self, response):
-        self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Affiche l'URL visitée
+        self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Log de l'URL visitée
 
         title = response.xpath('//title/text()').get(default='').strip()
-        title = title.replace("\xa0", " ")
 
-        # Construire dynamiquement les exclusions
         exclusions = build_xpath_exclusions(EXCLUDE_KEYWORDS)
-
-        # Expression XPath pour extraire le texte du body en excluant les éléments indésirables
         xpath_expression = f'//body//text()[{exclusions}]'
 
         texts = response.xpath(xpath_expression).getall()
-
-        # Joindre les textes extraits en une seule chaîne
         content = ' '.join(texts).strip()
-        content = content.replace("\xa0", " ")  # NBSP
-        content = ' '.join(content.split())
 
-
-        if content and content.strip():
-            item = WebCrawlerItem()
-            item['title'] = title
-            item['url'] = response.url
-            item['content'] = content
+        if content:
+            item = WebCrawlerItem(
+                title=title,
+                url=response.url,
+                content=content
+            )
             yield item
 
         links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
@@ -128,10 +118,3 @@ class WebCrawlerSpider(scrapy.Spider):
             self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
         else:
             self.log("No failed URLs.", level=logging.DEBUG)
-
-        # doc = Document(response.text, url=response.url)
-        # html_content = doc.summary()  # Récupère le contenu html
-        #
-        # soup = BeautifulSoup(html_content, 'html.parser')
-        # content = soup.get_text(separator='\n', strip=True)  # Nettoie le contenu
-        # content = content.replace('\u00A0', ' ')  # Pour les espaces spéciaux [NBSP]
