@@ -28,8 +28,10 @@ def build_xpath_exclusions(keywords):
 
 class WebCrawlerSpider(scrapy.Spider):
     name = 'web_crawler'
-    allowed_domains = ['lemonde.fr']  # (Pour l'instant)
-    start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
+    # allowed_domains = ['lemonde.fr']  # (Pour l'instant)
+    # start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
+    allowed_domains = []  # ouverture à tous les domaines
+    start_urls = ['https://www.lemonde.fr/', 'https://fr.wikipedia.org/', 'https://www.marmiton.org/']
 
     # start_urls = [
     #     'https://httpstat.us/200',  # URL valide code 200
