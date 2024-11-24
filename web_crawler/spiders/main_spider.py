@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 import logging
 from urllib.parse import urlparse
 import re
-from ..items import WebCrawlerItem
+from ..items import WebCrawlerItem, FailedItem
 
 EXCLUDE_KEYWORDS = [
     'header', 'footer', 'nav', 'aside', 'navigation',
@@ -114,7 +114,24 @@ class WebCrawlerSpider(scrapy.Spider):
 
     def closed(self, reason):
         if self.failed_urls:
+            # Afficher les URLs échouées dans les logs
             failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
-            self.log(f"Failed URLs: {failed_urls_str}", level=logging.DEBUG)
+            self.log(f"Failed URLs: {failed_urls_str}", level=logging.INFO)
+
+            # Écrire directement dans failed.json
+            failed_file_path = self.crawler.settings.get("FAILED_FILESAVER_CONFIG")["directory_path"] + "/" + \
+                               self.crawler.settings.get("FAILED_FILESAVER_CONFIG")["filename"]
+
+            failed_items = [{"failed_url": url, "error_code": code} for url, code in self.failed_urls]
+
+            try:
+                # Écriture dans le fichier JSON
+                with open(failed_file_path, 'w', encoding='utf-8') as file:
+                    import json
+                    json.dump(failed_items, file, indent=4, ensure_ascii=False)
+                self.log(f"Failed URLs written to {failed_file_path}", level=logging.INFO)
+            except Exception as e:
+                self.log(f"Error writing failed URLs to {failed_file_path}: {e}", level=logging.ERROR)
         else:
-            self.log("No failed URLs.", level=logging.DEBUG)
+            self.log("No failed URLs.", level=logging.INFO)
+

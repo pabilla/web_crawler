@@ -3,12 +3,11 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
-
 import logging
-from scrapy.exceptions import DropItem
 from scrapy.utils.project import get_project_settings
-from itemadapter import ItemAdapter  # useful for handling different item types with a single interface
+from itemadapter import ItemAdapter
 from web_crawler.spiders.file_savers import fileSaverFactory
+from web_crawler.items import WebCrawlerItem
 
 
 class WebCrawlerPipeline:
@@ -18,29 +17,43 @@ class WebCrawlerPipeline:
         self.file_saver = fileSaverFactory(file_saver_config)
 
     def process_item(self, item, spider):
-        adapter = ItemAdapter(item)
+        """
+        Traite chaque item extrait par le spider.
+        Valide les champs obligatoires et gère les logs personnalisés.
+        """
+        if isinstance(item, WebCrawlerItem):
+            adapter = ItemAdapter(item)
 
-        # Nettoyage des champs
-        adapter['title'] = self.clean_text(adapter.get('title', ''))
-        adapter['content'] = self.clean_text(adapter.get('content', ''))
+            # Nettoyer les champs
+            adapter['title'] = self.clean_text(adapter.get('title', ''))
+            adapter['content'] = self.clean_text(adapter.get('content', ''))
 
-        # Validation des champs
-        if all([adapter.get('title'), adapter.get('url'), adapter.get('content')]):
-            # Sauvegarde de l'item
-            self.file_saver.save({
-                "title": adapter['title'],
-                "url": adapter['url'],
-                "content": adapter['content']
-            })
-            return item
+            # Validation des champs obligatoires
+            if all([adapter.get('title'), adapter.get('url'), adapter.get('content')]):
+                # Sauvegarder l'item valide
+                self.file_saver.save({
+                    "title": adapter['title'],
+                    "url": adapter['url'],
+                    "content": adapter['content']
+                })
+                return item
+            else:
+                missing_fields = {
+                    "title": bool(adapter.get('title')),
+                    "url": bool(adapter.get('url')),
+                    "content": bool(adapter.get('content'))
+                }
+                spider.logger.warning(
+                    f"Missing fields: {missing_fields}, URL: {adapter.get('url', 'Unknown URL')}"
+                )
+                return None
         else:
-            logging.warning(f"Données manquantes dans l'item: {adapter.asdict()}")
-            raise DropItem("Item with missing information")
+            return item
 
     @staticmethod
     def clean_text(text):
         """
-        Nettoie le texte en remplaçant les caractères spéciaux et en supprimant les espaces superflus.
+        Nettoie le texte en supprimant les espaces superflus et les caractères spéciaux.
         """
         cleaned = text.replace("\xa0", " ")
         cleaned = ' '.join(cleaned.split())

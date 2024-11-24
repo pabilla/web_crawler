@@ -1,0 +1,38 @@
+[
+    {
+        "failed_url": "https://www.lemonde.fr/idees/2",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/enquetes-video/2",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/eclairages/2",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/afrique/article/2018/05/08/wanuri-kahiu-avec-rafiki-j-ai-voulu-raconter-une-belle-histoire-d-amour-africaine_5296145_3212.html",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/festival-de-cannes/article/2018/05/10/cannes-2018-rafiki-la-douceur-d-un-amour_5296990_766360.html",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/actualite/2",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/en/international/video/2023/10/08/how-ukraine-is-bringing-the-war-to-russian-territory_6156961_4.html",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/afrique/article/2023/10/05/dans-le-nord-du-mali-la-guerre-a-repris-entre-l-armee-et-les-ex-rebelles-independantistes_6192508_3212.html",
+        "error_code": 406
+    },
+    {
+        "failed_url": "https://www.lemonde.fr/comprendre-en-3-minutes/article/2023/09/16/pourquoi-y-a-t-il-une-ligne-en-pointille-entre-la-syrie-et-israel-comprendre-en-trois-minutes_6189636_6176282.html",
+        "error_code": 406
+    }
+]

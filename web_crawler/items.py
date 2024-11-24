@@ -12,3 +12,9 @@ class WebCrawlerItem(scrapy.Item):
     url = scrapy.Field()
     content = scrapy.Field()
     # Add ...
+
+
+class FailedItem(scrapy.Item):
+    failed_url = scrapy.Field()
+    error_code = scrapy.Field()
+

@@ -54,3 +54,14 @@ def fileSaverFactory(config: Dict) -> FileSaver:
         return LocalFileSaver(directory_path)
     else:
         raise ValueError("Not supported : choose 's3' or 'local'")
+
+# Config file saver for failed items
+def failedFileSaverFactory(config: Dict) -> FileSaver:
+    if config["type"] == "s3":
+        return S3FileSaver()
+    elif config["type"] == "local":
+        directory_path = config.get("directory_path", "./")
+        return LocalFileSaver(directory_path, filename=config.get("filename", "failed.json"))
+    else:
+        raise ValueError("Not supported: choose 's3' or 'local'")
+
