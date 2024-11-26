@@ -26,7 +26,7 @@ def build_xpath_exclusions(keywords):
     return ' and '.join(exclusions)
 
 
-class WebCrawlerSpider(scrapy.Spider):
+class WebCrawlerSpider(CrawlSpider):
     name = 'web_crawler'
     # allowed_domains = ['lemonde.fr']  # (Pour l'instant)
     # start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
@@ -71,15 +71,19 @@ class WebCrawlerSpider(scrapy.Spider):
         super(WebCrawlerSpider, self).__init__(*args, **kwargs)
         self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
 
-    def start_requests(self):
-        for url in self.start_urls:
-            yield scrapy.Request(
-                url=url,
-                callback=self.parse,
-                dont_filter=True  # Pour éviter que les URLs soient filtrées par dupliquées
-            )
+    # def start_requests(self):
+    #     for url in self.start_urls:
+    #         yield scrapy.Request(
+    #             url=url,
+    #             callback=self.parse,
+    #             dont_filter=True  # Pour éviter que les URLs soient filtrées par dupliquées
+    #         )
 
-    def parse(self, response):
+    def parse_item(self, response):
+
+        if 'robots.txt' in response.url:
+            return  # Ignorer les robots.txt
+
         self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Log de l'URL visitée
 
         title = response.xpath('//title/text()').get(default='').strip()
@@ -98,21 +102,21 @@ class WebCrawlerSpider(scrapy.Spider):
             )
             yield item
 
-        links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
-
-        for link in links:
-            link = response.urljoin(link)  # Gère les liens relatifs et absolus
-
-            # Ne prend que les liens appartenant au domaine lemonde.fr (pour l'instant) et non dans failed_urls
-            parsed_link = urlparse(link)
-            if parsed_link.scheme not in ['http', 'https']:
-                continue  # Ignore les liens non HTTP(S)
-
-            if "lemonde.fr" in link and link not in self.failed_urls:
-                yield scrapy.Request(
-                    url=link,
-                    callback=self.parse,
-                )
+        # links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
+        #
+        # for link in links:
+        #     link = response.urljoin(link)  # Gère les liens relatifs et absolus
+        #
+        #     # Ne prend que les liens appartenant au domaine lemonde.fr (pour l'instant) et non dans failed_urls
+        #     parsed_link = urlparse(link)
+        #     if parsed_link.scheme not in ['http', 'https']:
+        #         continue  # Ignore les liens non HTTP(S)
+        #
+        #     if "lemonde.fr" in link and link not in self.failed_urls:
+        #         yield scrapy.Request(
+        #             url=link,
+        #             callback=self.parse,
+        #         )
 
     def closed(self, reason):
         if self.failed_urls:

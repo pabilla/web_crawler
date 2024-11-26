@@ -1,38 +1,46 @@
 [
     {
-        "failed_url": "https://www.lemonde.fr/idees/2",
+        "failed_url": "https://www.lemonde.fr/actualite-medias/article/2019/08/12/les-flux-rss-du-monde-fr_5498778_3236.html",
         "error_code": 406
     },
     {
-        "failed_url": "https://www.lemonde.fr/enquetes-video/2",
-        "error_code": 406
+        "failed_url": "https://stats.wikimedia.org/robots.txt",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/eclairages/2",
-        "error_code": 406
+        "failed_url": "https://story.snapchat.com/robots.txt",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/afrique/article/2018/05/08/wanuri-kahiu-avec-rafiki-j-ai-voulu-raconter-une-belle-histoire-d-amour-africaine_5296145_3212.html",
-        "error_code": 406
+        "failed_url": "https://developer.wikimedia.org/robots.txt",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/festival-de-cannes/article/2018/05/10/cannes-2018-rafiki-la-douceur-d-un-amour_5296990_766360.html",
-        "error_code": 406
+        "failed_url": "https://ksh.wikipedia.org/wiki/Wikipedia:%C3%96vver_de_Wikipedia",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/actualite/2",
-        "error_code": 406
+        "failed_url": "https://tt.wikipedia.org/wiki/%D0%A2%D3%A9%D1%80%D0%BA%D0%B5%D0%BC:S%C3%A4y%C3%A4s%C3%A4t%C3%A7el%C3%A4r",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/en/international/video/2023/10/08/how-ukraine-is-bringing-the-war-to-russian-territory_6156961_4.html",
-        "error_code": 406
+        "failed_url": "https://commons.wikimedia.org/wiki/Commons:Impressum",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/afrique/article/2023/10/05/dans-le-nord-du-mali-la-guerre-a-repris-entre-l-armee-et-les-ex-rebelles-independantistes_6192508_3212.html",
-        "error_code": 406
+        "failed_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BA%B7c_bi%E1%BB%87t:Thay_%C4%91%E1%BB%95i_li%C3%AAn_quan/Th%E1%BB%83_lo%E1%BA%A1i:H%C3%ACnh_c%C3%B3_th%C6%B0%C6%A1ng_hi%E1%BB%87u",
+        "error_code": 404
     },
     {
-        "failed_url": "https://www.lemonde.fr/comprendre-en-3-minutes/article/2023/09/16/pourquoi-y-a-t-il-une-ligne-en-pointille-entre-la-syrie-et-israel-comprendre-en-trois-minutes_6189636_6176282.html",
-        "error_code": 406
+        "failed_url": "https://commons.wikimedia.org/wiki/Commons:%C3%96vver_der_Wikimedia_Commons",
+        "error_code": 404
+    },
+    {
+        "failed_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BA%B7c_bi%E1%BB%87t:Li%C3%AAn_k%E1%BA%BFt_%C4%91%E1%BA%BFn_%C4%91%C3%A2y/Th%E1%BB%83_lo%E1%BA%A1i:H%C3%ACnh_c%C3%B3_th%C6%B0%C6%A1ng_hi%E1%BB%87u",
+        "error_code": 404
+    },
+    {
+        "failed_url": "https://ksh.wikipedia.org/wiki/Extra:%C3%84nderungen_an_verlinkte_Sigge/Musick",
+        "error_code": 404
     }
 ]
