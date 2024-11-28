@@ -17,14 +17,20 @@ from twisted.internet.error import (
 )
 from twisted.web._newclient import ResponseFailed
 
+from web_crawler.spiders.file_savers import failedFileSaverFactory
+
 
 class ErrorHandlingMiddleware(RetryMiddleware):
     def __init__(self, settings):
         super(ErrorHandlingMiddleware, self).__init__(settings)
+        failed_file_saver_config = settings.get("FAILED_FILESAVER_CONFIG")
+        self.failed_file_saver = failedFileSaverFactory(failed_file_saver_config)
 
     @classmethod
     def from_crawler(cls, crawler):
-        return cls(crawler.settings)
+        middleware = cls(crawler.settings)
+        crawler.signals.connect(middleware.spider_closed, signal=signals.spider_closed)
+        return middleware
 
     def process_request(self, request, spider):
         # Évite de refaire une requête pour les URLs déjà définie dans failed
@@ -79,3 +85,11 @@ class ErrorHandlingMiddleware(RetryMiddleware):
                         f"Exception {error_type} for {request.url} after {retries} retries. Added to failed_urls list.")
         # Pour toutes les autres exceptions, les laisser passer normalement
         return None
+
+    def spider_closed(self, spider):
+        if spider.failed_urls:
+            failed_items = [{"failed_url": url, "error_code": code} for url, code in spider.failed_urls]
+            for item in failed_items:
+                self.failed_file_saver.save(item)
+            if hasattr(self.failed_file_saver, 'close'):
+                self.failed_file_saver.close()

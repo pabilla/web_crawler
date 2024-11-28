@@ -15,15 +15,23 @@ class FileSaver(abc.ABC):
 
 # Save s3
 class S3FileSaver(FileSaver):
-    def __init__(self):
+    def __init__(self, s3_bucket, filename="data.json"):
         super().__init__()
-        self.s3_bucket = "my_bucket"
+        self.s3_bucket = s3_bucket
+        self.filename = filename
+        self.items = []  # Liste pour stocker les items temporairement
 
-    def save(self, filepath: str, data: str):
-        # Initialisation client s3
+    def save(self, item):
+        self.items.append(item)
+
+    def close(self):
+        # Convertir les items en JSON
+        data = json.dumps(self.items, indent=4, ensure_ascii=False)
+        # Enregistrer dans S3
         s3_client = boto3.client('s3')
-        s3_client.put_object(Bucket=self.s3_bucket, Key=filepath, Body=data)
-        print(f"Saving of {filepath} in S3 bucket '{self.s3_bucket}'.")
+        s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=data.encode('utf-8'))
+        print(f"Fichier '{self.filename}' enregistré dans le bucket S3 '{self.s3_bucket}'.")
+
 
 
 # Save locale
@@ -48,20 +56,28 @@ class LocalFileSaver(FileSaver):
 # Config file saver
 def fileSaverFactory(config: Dict) -> FileSaver:
     if config["type"] == "s3":
-        return S3FileSaver()
+        s3_bucket = config.get("s3_bucket")
+        filename = config.get("filename", "data.json")
+        return S3FileSaver(s3_bucket, filename)
     elif config["type"] == "local":
         directory_path = config.get("directory_path", "./")
-        return LocalFileSaver(directory_path)
+        filename = config.get("filename", "data.json")
+        return LocalFileSaver(directory_path, filename)
     else:
-        raise ValueError("Not supported : choose 's3' or 'local'")
+        raise ValueError("Type non supporté : choisissez 's3' ou 'local'")
+
 
 # Config file saver for failed items
 def failedFileSaverFactory(config: Dict) -> FileSaver:
     if config["type"] == "s3":
-        return S3FileSaver()
+        s3_bucket = config.get("s3_bucket")
+        filename = config.get("filename", "failed.json")
+        return S3FileSaver(s3_bucket, filename)
     elif config["type"] == "local":
         directory_path = config.get("directory_path", "./")
-        return LocalFileSaver(directory_path, filename=config.get("filename", "failed.json"))
+        filename = config.get("filename", "failed.json")
+        return LocalFileSaver(directory_path, filename)
     else:
-        raise ValueError("Not supported: choose 's3' or 'local'")
+        raise ValueError("Type non supporté : choisissez 's3' ou 'local'")
+
 

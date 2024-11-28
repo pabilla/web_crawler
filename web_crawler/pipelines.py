@@ -8,6 +8,7 @@ from scrapy.utils.project import get_project_settings
 from itemadapter import ItemAdapter
 from web_crawler.spiders.file_savers import fileSaverFactory
 from web_crawler.items import WebCrawlerItem
+from scrapy import signals
 
 
 class WebCrawlerPipeline:
@@ -15,6 +16,12 @@ class WebCrawlerPipeline:
         settings = get_project_settings()
         file_saver_config = settings.get("FILESAVER_CONFIG")
         self.file_saver = fileSaverFactory(file_saver_config)
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        pipeline = cls()
+        crawler.signals.connect(pipeline.spider_closed, signal=signals.spider_closed)
+        return pipeline
 
     def process_item(self, item, spider):
         """
@@ -58,3 +65,7 @@ class WebCrawlerPipeline:
         cleaned = text.replace("\xa0", " ")
         cleaned = ' '.join(cleaned.split())
         return cleaned
+
+    def spider_closed(self, spider):
+        if hasattr(self.file_saver, 'close'):
+            self.file_saver.close()

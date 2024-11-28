@@ -1,9 +1,12 @@
 import scrapy
+from scrapy import signals
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import logging
 from urllib.parse import urlparse
 import re
+
+from .file_savers import failedFileSaverFactory
 from ..items import WebCrawlerItem, FailedItem
 
 EXCLUDE_KEYWORDS = [
@@ -117,6 +120,7 @@ class WebCrawlerSpider(CrawlSpider):
         #             url=link,
         #             callback=self.parse,
         #         )
+
 
     def closed(self, reason):
         if self.failed_urls:
