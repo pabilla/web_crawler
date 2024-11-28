@@ -120,7 +120,12 @@ class WebCrawlerSpider(CrawlSpider):
         #             url=link,
         #             callback=self.parse,
         #         )
-
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(WebCrawlerSpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider.failed_file_saver = failedFileSaverFactory(crawler.settings.get('FAILED_FILESAVER_CONFIG'))
+        crawler.signals.connect(spider.closed, signal=signals.spider_closed)
+        return spider
 
     def closed(self, reason):
         if self.failed_urls:
@@ -128,20 +133,14 @@ class WebCrawlerSpider(CrawlSpider):
             failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
             self.log(f"Failed URLs: {failed_urls_str}", level=logging.INFO)
 
-            # Écrire directement dans failed.json
-            failed_file_path = self.crawler.settings.get("FAILED_FILESAVER_CONFIG")["directory_path"] + "/" + \
-                               self.crawler.settings.get("FAILED_FILESAVER_CONFIG")["filename"]
-
+            # Utiliser failedFileSaver pour sauvegarder les URLs échouées
             failed_items = [{"failed_url": url, "error_code": code} for url, code in self.failed_urls]
+            for item in failed_items:
+                self.failed_file_saver.save(item)
 
-            try:
-                # Écriture dans le fichier JSON
-                with open(failed_file_path, 'w', encoding='utf-8') as file:
-                    import json
-                    json.dump(failed_items, file, indent=4, ensure_ascii=False)
-                self.log(f"Failed URLs written to {failed_file_path}", level=logging.INFO)
-            except Exception as e:
-                self.log(f"Error writing failed URLs to {failed_file_path}: {e}", level=logging.ERROR)
+            if hasattr(self.failed_file_saver, 'close'):
+                self.failed_file_saver.close()
         else:
             self.log("No failed URLs.", level=logging.INFO)
+
 

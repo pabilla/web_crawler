@@ -52,7 +52,7 @@ LOG_LEVEL = 'INFO'  # Log level to see more details when debugging
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
     'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware': None,
-
+    'scrapy.downloadermiddlewares.offsite.OffsiteMiddleware': 100,
     'scrapy.spidermiddlewares.referer.RefererMiddleware': 700,
     'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware': 800,
     'scrapy.spidermiddlewares.depth.DepthMiddleware': 900,
@@ -64,7 +64,7 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
 
     'web_crawler.middlewares.ErrorHandlingMiddleware': 550,
-    'scrapy.downloadermiddlewares.offsite.OffsiteMiddleware': 100,
+
     'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 200,
     'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
     'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
