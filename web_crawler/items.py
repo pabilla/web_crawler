@@ -11,7 +11,6 @@ class WebCrawlerItem(scrapy.Item):
     title = scrapy.Field()
     url = scrapy.Field()
     content = scrapy.Field()
-    # Add ...
 
 
 class FailedItem(scrapy.Item):

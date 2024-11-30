@@ -3,8 +3,6 @@ from scrapy import signals
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import logging
-from urllib.parse import urlparse
-import re
 
 from .file_savers import failedFileSaverFactory
 from ..items import WebCrawlerItem, FailedItem
@@ -31,8 +29,6 @@ def build_xpath_exclusions(keywords):
 
 class WebCrawlerSpider(CrawlSpider):
     name = 'web_crawler'
-    # allowed_domains = ['lemonde.fr']  # (Pour l'instant)
-    # start_urls = ['https://www.lemonde.fr/']  # (Pour l'instant)
     allowed_domains = []  # ouverture à tous les domaines
     start_urls = ['https://www.lemonde.fr/', 'https://fr.wikipedia.org/', 'https://www.marmiton.org/']
 
@@ -74,13 +70,6 @@ class WebCrawlerSpider(CrawlSpider):
         super(WebCrawlerSpider, self).__init__(*args, **kwargs)
         self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
 
-    # def start_requests(self):
-    #     for url in self.start_urls:
-    #         yield scrapy.Request(
-    #             url=url,
-    #             callback=self.parse,
-    #             dont_filter=True  # Pour éviter que les URLs soient filtrées par dupliquées
-    #         )
 
     def parse_item(self, response):
 
@@ -105,21 +94,6 @@ class WebCrawlerSpider(CrawlSpider):
             )
             yield item
 
-        # links = response.css('a::attr(href)').getall()  # Récupère les liens de la page
-        #
-        # for link in links:
-        #     link = response.urljoin(link)  # Gère les liens relatifs et absolus
-        #
-        #     # Ne prend que les liens appartenant au domaine lemonde.fr (pour l'instant) et non dans failed_urls
-        #     parsed_link = urlparse(link)
-        #     if parsed_link.scheme not in ['http', 'https']:
-        #         continue  # Ignore les liens non HTTP(S)
-        #
-        #     if "lemonde.fr" in link and link not in self.failed_urls:
-        #         yield scrapy.Request(
-        #             url=link,
-        #             callback=self.parse,
-        #         )
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(WebCrawlerSpider, cls).from_crawler(crawler, *args, **kwargs)
