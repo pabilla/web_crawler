@@ -119,14 +119,14 @@ FEED_EXPORT_FIELDS = ['title', 'url', 'content']
 
 # Saving type : local or s3
 FILESAVER_CONFIG = {
-    "type": "local",  # local or s3
+    "type": "s3",  # local or s3
     "directory_path": "./web_crawler",  # local path
     "filename": "data.json",
     "s3_bucket": "esme-project"  # s3 parameters
 }
 
 FAILED_FILESAVER_CONFIG = {
-    "type": "local",  # local or s3
+    "type": "s3",  # local or s3
     "directory_path": "./web_crawler",  # local path
     "filename": "failed.json",
     "s3_bucket": "esme-project",  # s3 parameters
