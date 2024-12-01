@@ -9,6 +9,9 @@ from itemadapter import ItemAdapter
 from web_crawler.spiders.file_savers import fileSaverFactory
 from web_crawler.items import WebCrawlerItem
 from scrapy import signals
+from bs4 import BeautifulSoup
+import re
+import html
 
 
 class WebCrawlerPipeline:
@@ -62,8 +65,38 @@ class WebCrawlerPipeline:
         """
         Nettoie le texte en supprimant les espaces superflus et les caractères spéciaux.
         """
-        cleaned = text.replace("\xa0", " ")
+        # Convertir les entités HTML en caractères
+        text = html.unescape(text)
+
+        # Supprimer les espaces insécables
+        text = text.replace("\xa0", " ")
+
+        # Vérifier si le texte contient des balises HTML
+        if '<' in text and '>' in text:
+            # Utiliser BeautifulSoup pour parser le texte
+            soup = BeautifulSoup(text, 'html.parser')
+
+            # Supprimer les balises script et style
+            for script_or_style in soup(['script', 'style']):
+                script_or_style.decompose()
+
+            # Obtenir le texte nettoyé
+            cleaned = soup.get_text(separator=' ')
+        else:
+            cleaned = text
+
+        # Supprimer les espaces multiples et les espaces en début/fin de chaîne
         cleaned = ' '.join(cleaned.split())
+
+        # Définir les apostrophes à inclure
+        APOSTROPHES = "'’"  # Inclut U+0027 et U+2019
+
+        # Supprimer les caractères spéciaux, en conservant les apostrophes
+        cleaned = re.sub(rf"[^a-zA-Z0-9À-ÿ{APOSTROPHES}\-.,;!?()\s]", '', cleaned)
+
+        # Réduire les espaces multiples
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
         return cleaned
 
     def spider_closed(self, spider):

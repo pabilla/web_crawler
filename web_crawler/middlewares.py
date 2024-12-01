@@ -33,7 +33,11 @@ class ErrorHandlingMiddleware(RetryMiddleware):
         return middleware
 
     def process_request(self, request, spider):
-        # Évite de refaire une requête pour les URLs déjà définie dans failed
+        # Vérifier si l'URL a déjà été traitée avec succès
+        if request.url in spider.processed_urls:
+            spider.logger.debug(f"Skipping already processed URL {request.url}")
+            raise IgnoreRequest()
+        # Vérifier si l'URL est dans les URLs échouées
         if request.url in {url for url, _ in spider.failed_urls}:
             spider.logger.debug(f"Skipping failed URL {request.url}")
             raise IgnoreRequest()
