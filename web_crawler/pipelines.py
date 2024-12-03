@@ -6,7 +6,7 @@
 import logging
 from scrapy.utils.project import get_project_settings
 from itemadapter import ItemAdapter
-from web_crawler.spiders.file_savers import fileSaverFactory
+from .spiders.file_savers import fileSaverFactory
 from web_crawler.items import WebCrawlerItem
 from scrapy import signals
 from bs4 import BeautifulSoup
@@ -32,6 +32,7 @@ class WebCrawlerPipeline:
         Valide les champs obligatoires et gère les logs personnalisés.
         """
         if isinstance(item, WebCrawlerItem):
+            spider.logger.info(f"Processing item: {item['url']}")
             adapter = ItemAdapter(item)
 
             # Nettoyer les champs
@@ -58,6 +59,7 @@ class WebCrawlerPipeline:
                 )
                 return None
         else:
+            spider.logger.warning("Received an item that is not a WebCrawlerItem.")
             return item
 
     @staticmethod

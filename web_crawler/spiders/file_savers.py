@@ -1,119 +1,100 @@
 import abc
+from datetime import datetime
 from typing import Dict
 import json
 import os
 import boto3
 
 
-# Classe abstraite pour la sauvegarde des fichiers
 class FileSaver(abc.ABC):
     @abc.abstractmethod
-    def save(self, filepath: str, data: str):
-        """Méthode abstraite pour sauvegarder des données dans un fichier."""
+    def save(self, data: Dict):
+        """Méthode abstraite pour sauvegarder des données."""
         pass
 
 
-# Save s3
 class S3FileSaver(FileSaver):
-    def __init__(self, s3_bucket, filename="data.json"):
+    def __init__(self, s3_bucket, filename="data.jsonl"):
         super().__init__()
         self.s3_bucket = s3_bucket
         self.filename = filename
-        self.items = []  # Liste pour stocker les items temporairement
-
-        # Initialiser le client S3
         self.s3_client = boto3.client('s3')
 
-        # Télécharger le fichier existant s'il existe
+        # Initialiser le fichier S3 si nécessaire
         try:
-            response = self.s3_client.get_object(Bucket=self.s3_bucket, Key=self.filename)
-            existing_data = json.load(response['Body'])
-            self.items.extend(existing_data)
+            self.s3_client.head_object(Bucket=self.s3_bucket, Key=self.filename)
         except self.s3_client.exceptions.NoSuchKey:
-            pass  # Le fichier n'existe pas encore
-        except json.JSONDecodeError:
-            pass  # Fichier vide ou corrompu, on passe
+            self.s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=b'')
 
-    def save(self, item):
-        self.items.append(item)
+    def save(self, item: Dict):
+        # Convertir l'item en JSON et ajouter une nouvelle ligne
+        json_line = json.dumps(item, ensure_ascii=False) + '\n'
+        self.s3_client.put_object(
+            Bucket=self.s3_bucket,
+            Key=self.filename,
+            Body=json_line.encode('utf-8'),
+            ContentType='application/jsonl',
+            # Utiliser un byte-range pour append est complexe; une alternative est d'utiliser des multipart uploads ou de gérer un buffer local
+        )
+        print(f"Item saved to S3 bucket '{self.s3_bucket}' in file '{self.filename}'.")
 
     def close(self):
-        # Convertir les items en JSON
-        data = json.dumps(self.items, indent=4, ensure_ascii=False)
-        # Enregistrer dans S3
-        self.s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=data.encode('utf-8'))
-        print(f"Fichier '{self.filename}' mis à jour dans le bucket S3 '{self.s3_bucket}'.")
-
-        # # Convertir les items en JSON
-        # data = json.dumps(self.items, indent=4, ensure_ascii=False)
-        # # Enregistrer dans S3
-        # s3_client = boto3.client('s3')
-        # s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=data.encode('utf-8'))
-        # print(f"Fichier '{self.filename}' enregistré dans le bucket S3 '{self.s3_bucket}'.")
+        # Pas besoin de faire quoi que ce soit ici
+        pass
 
 
-# Save locale
 class LocalFileSaver(FileSaver):
-    def __init__(self, directory_path: str, filename="data.json"):
+    def __init__(self, directory_path: str, filename="data.jsonl"):
         super().__init__()
-        self.filepath = os.path.join(directory_path, filename)
-        os.makedirs(directory_path, exist_ok=True)
-        # Initialiser le fichier JSON vide au début du crawl
-        # with open(self.filepath, 'w', encoding='utf-8') as file:
-        #     json.dump([], file)
+        self.filepath = os.path.abspath(os.path.join(directory_path, filename))
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+        # Créer le fichier s'il n'existe pas
+        open(self.filepath, 'a', encoding='utf-8').close()
+        # Ouvrir le fichier en mode 'append'
+        self.file = open(self.filepath, 'a', encoding='utf-8')
 
-    def save(self, item):
+    def save(self, item: Dict):
+        try:
+            json.dump(item, self.file, ensure_ascii=False)
+            self.file.write('\n')  # Ajouter une nouvelle ligne
+            self.file.flush()  # Forcer l'écriture sur le disque
+            print(f"Item saved locally in '{self.filepath}'.")
+        except Exception as e:
+            print(f"Failed to save item: {e}")
 
-        # Charger les données existantes s'il y en a
-        if os.path.exists(self.filepath):
-            with open(self.filepath, 'r', encoding='utf-8') as file:
-                try:
-                    file_data = json.load(file)
-                except json.JSONDecodeError:
-                    file_data = []
-        else:
-            file_data = []
+    # def save(self, item: Dict):
+    #     with open(self.filepath, 'a', encoding='utf-8') as file:
+    #         json.dump(item, file, ensure_ascii=False)
+    #         file.write('\n')  # Ajouter une nouvelle ligne
+    #     print(f"Item saved locally in '{self.filepath}' at {datetime.now()}.")
 
-        # Ajouter le nouvel item
-        file_data.append(item)
-
-        # Écrire les données mises à jour dans le fichier
-        with open(self.filepath, 'w', encoding='utf-8') as file:
-            json.dump(file_data, file, indent=4, ensure_ascii=False)
-
-        print(f"Item saved in {self.filepath}.")
-
-    # with open(self.filepath, 'r+', encoding='utf-8') as file:
-    #     file_data = json.load(file)
-    #     file_data.append(item)
-    #     file.seek(0)
-    #     json.dump(file_data, file, indent=4, ensure_ascii=False)
-    # print(f"Item saving in {self.filepath}.")
+    def close(self):
+        # Pas besoin de faire quoi que ce soit ici
+        self.file.close()
 
 
-# Config file saver
 def fileSaverFactory(config: Dict) -> FileSaver:
     if config["type"] == "s3":
         s3_bucket = config.get("s3_bucket")
-        filename = config.get("filename", "data.json")
+        filename = config.get("filename", "data.jsonl")
         return S3FileSaver(s3_bucket, filename)
     elif config["type"] == "local":
         directory_path = config.get("directory_path", "./")
-        filename = config.get("filename", "data.json")
+        filename = config.get("filename", "data.jsonl")
         return LocalFileSaver(directory_path, filename)
     else:
         raise ValueError("Type non supporté : choisissez 's3' ou 'local'")
 
 
-# Config file saver for failed items
 def failedFileSaverFactory(config: Dict) -> FileSaver:
     if config["type"] == "s3":
         s3_bucket = config.get("s3_bucket")
-        filename = config.get("filename", "failed.json")
+        filename = config.get("filename", "failed.jsonl")
         return S3FileSaver(s3_bucket, filename)
     elif config["type"] == "local":
         directory_path = config.get("directory_path", "./")
-        filename = config.get("filename", "failed.json")
+        filename = config.get("filename", "failed.jsonl")
         return LocalFileSaver(directory_path, filename)
     else:
-        raise ValueError("Not supported: choose 's3' or 'local'")
+        raise ValueError("Type non supporté : choisissez 's3' ou 'local'")
+

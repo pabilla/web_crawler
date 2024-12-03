@@ -33,7 +33,7 @@ def build_xpath_exclusions(keywords):
 class WebCrawlerSpider(CrawlSpider):
     name = 'web_crawler'
     allowed_domains = []  # ouverture à tous les domaines
-    start_urls = ['https://www.lemonde.fr/', 'https://fr.wikipedia.org/', 'https://www.marmiton.org/']
+    start_urls = ['https://www.lemonde.fr/', 'https://www.marmiton.org/', 'www.tripadvisor.fr']
 
     # start_urls = [
     #     'https://httpstat.us/200',  # URL valide code 200
@@ -74,26 +74,39 @@ class WebCrawlerSpider(CrawlSpider):
         self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
         self.processed_urls = set()  # Ensemble pour les URLs déjà traitées
 
-        # Charger les URLs depuis data.json
-        data_filepath = os.path.join('web_crawler', 'data.json')
+        # Définir les chemins des fichiers
+        data_filepath = os.path.abspath(os.path.join('web_crawler', 'data.jsonl'))
+        failed_filepath = os.path.abspath(os.path.join('web_crawler', 'failed.jsonl'))
+
+        # S'assurer que le répertoire existe
+        os.makedirs(os.path.dirname(data_filepath), exist_ok=True)
+
+        # Créer les fichiers s'ils n'existent pas
+        open(data_filepath, 'a', encoding='utf-8').close()
+        open(failed_filepath, 'a', encoding='utf-8').close()
+
+        # Charger les URLs depuis data.jsonl
         if os.path.exists(data_filepath):
             with open(data_filepath, 'r', encoding='utf-8') as file:
-                try:
-                    data = json.load(file)
-                    self.processed_urls.update(item['url'] for item in data if 'url' in item)
-                except json.JSONDecodeError:
-                    pass  # Fichier vide ou corrompu, on passe
-        # Charger les URLs depuis failed.json
-        failed_filepath = os.path.join('web_crawler', 'failed.json')
+                for line in file:
+                    try:
+                        item = json.loads(line)
+                        if 'url' in item:
+                            self.processed_urls.add(item['url'])
+                    except json.JSONDecodeError:
+                        continue  # Ignorer les lignes mal formées
+
+        # Charger les URLs depuis failed.jsonl
         if os.path.exists(failed_filepath):
             with open(failed_filepath, 'r', encoding='utf-8') as file:
-                try:
-                    failed_data = json.load(file)
-                    self.failed_urls.extend((item['failed_url'], item.get('error_code', '')) for item in failed_data if
-                                            'failed_url' in item)
-                    self.processed_urls.update(item['failed_url'] for item in failed_data if 'failed_url' in item)
-                except json.JSONDecodeError:
-                    pass
+                for line in file:
+                    try:
+                        item = json.loads(line)
+                        if 'failed_url' in item:
+                            self.failed_urls.append((item['failed_url'], item.get('error_code', '')))
+                            self.processed_urls.add(item['failed_url'])
+                    except json.JSONDecodeError:
+                        continue  # Ignorer les lignes mal formées
 
     def parse_item(self, response):
 
@@ -122,6 +135,7 @@ class WebCrawlerSpider(CrawlSpider):
                 url=response.url,
                 content=content
             )
+            self.logger.info(f"Yielding item: {response.url}")
             yield item
 
     @classmethod
@@ -133,16 +147,22 @@ class WebCrawlerSpider(CrawlSpider):
 
     def closed(self, reason):
         if self.failed_urls:
-            # Afficher les URLs échouées dans les logs
-            failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
-            self.log(f"Failed URLs: {failed_urls_str}", level=logging.INFO)
-
-            # Utiliser failedFileSaver pour sauvegarder les URLs échouées
-            failed_items = [{"failed_url": url, "error_code": code} for url, code in self.failed_urls]
-            for item in failed_items:
-                self.failed_file_saver.save(item)
-
-            if hasattr(self.failed_file_saver, 'close'):
-                self.failed_file_saver.close()
+            # Retirer tout le code lié à la sauvegarde des failed_urls
+            self.log("No failed URLs to save here, they are saved in real-time by the middleware.", level=logging.INFO)
         else:
             self.log("No failed URLs.", level=logging.INFO)
+
+        # if self.failed_urls:
+        #     # Afficher les URLs échouées dans les logs
+        #     failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
+        #     self.log(f"Failed URLs: {failed_urls_str}", level=logging.INFO)
+        #
+        #     # Utiliser failedFileSaver pour sauvegarder les URLs échouées
+        #     failed_items = [{"failed_url": url, "error_code": code} for url, code in self.failed_urls]
+        #     for item in failed_items:
+        #         self.failed_file_saver.save(item)
+        #
+        #     if hasattr(self.failed_file_saver, 'close'):
+        #         self.failed_file_saver.close()
+        # else:
+        #     self.log("No failed URLs.", level=logging.INFO)

@@ -53,6 +53,7 @@ class ErrorHandlingMiddleware(RetryMiddleware):
             if (response.url, response.status) not in spider.failed_urls:
                 spider.failed_urls.append((response.url, response.status))
                 spider.logger.warning(f"HTTP Error {response.status} for {response.url}. Added to failed_urls list.")
+                self.failed_file_saver.save({"failed_url": response.url, "error_code": response.status})
             raise IgnoreRequest()
 
         elif response.status in retry_error_codes:
@@ -67,6 +68,7 @@ class ErrorHandlingMiddleware(RetryMiddleware):
                     spider.failed_urls.append((response.url, response.status))
                     spider.logger.warning(
                         f"HTTP Error {response.status} for {response.url} after {retries} retries. Added to failed_urls list.")
+                    self.failed_file_saver.save({"failed_url": response.url, "error_code": response.status})
                 raise IgnoreRequest()
 
         # Pour toutes les autres réponses, les laisser passer normalement
@@ -87,13 +89,10 @@ class ErrorHandlingMiddleware(RetryMiddleware):
                     spider.failed_urls.append((request.url, error_type))
                     spider.logger.error(
                         f"Exception {error_type} for {request.url} after {retries} retries. Added to failed_urls list.")
+                    self.failed_file_saver.save({"failed_url": request.url, "error_code": error_type})
         # Pour toutes les autres exceptions, les laisser passer normalement
         return None
 
     def spider_closed(self, spider):
-        if spider.failed_urls:
-            failed_items = [{"failed_url": url, "error_code": code} for url, code in spider.failed_urls]
-            for item in failed_items:
-                self.failed_file_saver.save(item)
-            if hasattr(self.failed_file_saver, 'close'):
-                self.failed_file_saver.close()
+        if hasattr(self.failed_file_saver, 'close'):
+            self.failed_file_saver.close()
