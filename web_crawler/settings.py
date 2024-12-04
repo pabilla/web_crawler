@@ -24,7 +24,7 @@ RETRY_ENABLED = True
 RETRY_TIMES = 5  # Number of unsuccessful attempts before considering the link dead
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
 DOWNLOAD_DELAY = 1  # 1-second delay to avoid "too many requests" (429)
-CONCURRENT_REQUESTS = 10
+CONCURRENT_REQUESTS = 15
 
 # Override the default request headers (Error 406):
 DEFAULT_REQUEST_HEADERS = {
@@ -119,15 +119,17 @@ FEED_EXPORT_FIELDS = ['title', 'url', 'content']
 
 # Saving type : local or s3
 FILESAVER_CONFIG = {
-    "type": "local",  # local or s3
+    "type": "s3",  # local or s3
     "directory_path": "./web_crawler",  # local path
     "filename": "data.jsonl",
-    "s3_bucket": "esme-project"  # s3 parameters
+    "s3_bucket": "esme-project",  # s3 parameters
+    "upload_interval": 10
 }
 
 FAILED_FILESAVER_CONFIG = {
-    "type": "local",  # local or s3
+    "type": "s3",  # local or s3
     "directory_path": "./web_crawler",  # local path
     "filename": "failed.jsonl",
     "s3_bucket": "esme-project",  # s3 parameters
+    #"upload_interval": 10
 }

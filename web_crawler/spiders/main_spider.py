@@ -33,7 +33,7 @@ def build_xpath_exclusions(keywords):
 class WebCrawlerSpider(CrawlSpider):
     name = 'web_crawler'
     allowed_domains = []  # ouverture à tous les domaines
-    start_urls = ['https://www.lemonde.fr/', 'https://www.marmiton.org/', 'www.tripadvisor.fr']
+    start_urls = ['https://www.lemonde.fr/', 'https://www.marmiton.org/', 'https://openclassrooms.com/fr/']
 
     # start_urls = [
     #     'https://httpstat.us/200',  # URL valide code 200

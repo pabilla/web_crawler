@@ -4,6 +4,8 @@ from typing import Dict
 import json
 import os
 import boto3
+import tempfile
+import botocore
 
 
 class FileSaver(abc.ABC):
@@ -14,33 +16,70 @@ class FileSaver(abc.ABC):
 
 
 class S3FileSaver(FileSaver):
-    def __init__(self, s3_bucket, filename="data.jsonl"):
+    def __init__(self, s3_bucket, filename="data.jsonl", upload_interval=10):
         super().__init__()
         self.s3_bucket = s3_bucket
         self.filename = filename
         self.s3_client = boto3.client('s3')
 
-        # Initialiser le fichier S3 si nécessaire
+        self.buffer = []
+        self.upload_interval = upload_interval  # Nombre d'items avant upload
+        self.local_file_path = '/tmp/' + self.filename  # Chemin local temporaire
+
+        # Vérifier si l'objet existe sur S3
         try:
             self.s3_client.head_object(Bucket=self.s3_bucket, Key=self.filename)
-        except self.s3_client.exceptions.NoSuchKey:
-            self.s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=b'')
+            print(f"File '{self.filename}' already exists in S3 bucket '{self.s3_bucket}'.")
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                # L'objet n'existe pas, créer un fichier vide sur S3
+                self.s3_client.put_object(Bucket=self.s3_bucket, Key=self.filename, Body=b'')
+                print(f"Created empty file '{self.filename}' in S3 bucket '{self.s3_bucket}'.")
+            else:
+                # Autre erreur
+                print(f"Error checking if object exists in S3: {e}")
+                raise
 
     def save(self, item: Dict):
-        # Convertir l'item en JSON et ajouter une nouvelle ligne
-        json_line = json.dumps(item, ensure_ascii=False) + '\n'
-        self.s3_client.put_object(
-            Bucket=self.s3_bucket,
-            Key=self.filename,
-            Body=json_line.encode('utf-8'),
-            ContentType='application/jsonl',
-            # Utiliser un byte-range pour append est complexe; une alternative est d'utiliser des multipart uploads ou de gérer un buffer local
-        )
-        print(f"Item saved to S3 bucket '{self.s3_bucket}' in file '{self.filename}'.")
+        try:
+            self.buffer.append(item)
+            if len(self.buffer) >= self.upload_interval:
+                self.upload_buffer()
+        except Exception as e:
+            print(f"Failed to save item to buffer: {e}")
+
+    def upload_buffer(self):
+        try:
+            # Télécharger le fichier existant depuis S3
+            existing_data = ''
+            try:
+                response = self.s3_client.get_object(Bucket=self.s3_bucket, Key=self.filename)
+                existing_data = response['Body'].read().decode('utf-8')
+            except self.s3_client.exceptions.NoSuchKey:
+                pass  # Le fichier n'existe pas encore sur S3
+
+            # Ajouter les nouveaux items
+            new_data = existing_data
+            for item in self.buffer:
+                new_data += json.dumps(item, ensure_ascii=False) + '\n'
+
+            # Écrire les données dans le fichier local temporaire
+            with open(self.local_file_path, 'w', encoding='utf-8') as f:
+                f.write(new_data)
+
+            # Uploader le fichier sur S3
+            self.s3_client.upload_file(self.local_file_path, self.s3_bucket, self.filename)
+            print(f"Uploaded buffer to S3 bucket '{self.s3_bucket}' as '{self.filename}'.")
+            # Vider le buffer
+            self.buffer.clear()
+            # Supprimer le fichier local temporaire
+            os.remove(self.local_file_path)
+        except Exception as e:
+            print(f"Failed to upload buffer to S3: {e}")
 
     def close(self):
-        # Pas besoin de faire quoi que ce soit ici
-        pass
+        if self.buffer:
+            self.upload_buffer()
 
 
 class LocalFileSaver(FileSaver):
