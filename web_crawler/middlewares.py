@@ -1,10 +1,3 @@
-# Define here the models for your spider middleware
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
-
-import logging
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
@@ -16,7 +9,6 @@ from twisted.internet.error import (
     ConnectionRefusedError,
 )
 from twisted.web._newclient import ResponseFailed
-
 from web_crawler.spiders.file_savers import failedFileSaverFactory
 
 
@@ -33,20 +25,16 @@ class ErrorHandlingMiddleware(RetryMiddleware):
         return middleware
 
     def process_request(self, request, spider):
-        # Vérifier si l'URL a déjà été traitée avec succès
         if request.url in spider.processed_urls:
             spider.logger.debug(f"Skipping already processed URL {request.url}")
             raise IgnoreRequest()
-        # Vérifier si l'URL est dans les URLs échouées
         if request.url in {url for url, _ in spider.failed_urls}:
             spider.logger.debug(f"Skipping failed URL {request.url}")
             raise IgnoreRequest()
         return None
 
     def process_response(self, request, response, spider):
-        # Codes d'erreur à gérer immédiatement (sans réessai)
         immediate_error_codes = [403, 404, 406]
-        # Codes d'erreur à gérer avec réessai
         retry_error_codes = [500, 502, 503, 504, 408, 429]
 
         if response.status in immediate_error_codes:
@@ -71,11 +59,9 @@ class ErrorHandlingMiddleware(RetryMiddleware):
                     self.failed_file_saver.save({"failed_url": response.url, "error_code": response.status})
                 raise IgnoreRequest()
 
-        # Pour toutes les autres réponses, les laisser passer normalement
         return response
 
     def process_exception(self, request, exception, spider):
-        # Gestion des exceptions réseau et de connexion
         if isinstance(exception,
                       (TimeoutError, TCPTimedOutError, DNSLookupError, ConnectionRefusedError, ResponseFailed)):
             retries = request.meta.get('retry_times', 0)
@@ -90,9 +76,8 @@ class ErrorHandlingMiddleware(RetryMiddleware):
                     spider.logger.error(
                         f"Exception {error_type} for {request.url} after {retries} retries. Added to failed_urls list.")
                     self.failed_file_saver.save({"failed_url": request.url, "error_code": error_type})
-        # Pour toutes les autres exceptions, les laisser passer normalement
         return None
 
-    def spider_closed(self, spider):
+    def spider_closed(self):
         if hasattr(self.failed_file_saver, 'close'):
             self.failed_file_saver.close()

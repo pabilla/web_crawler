@@ -1,11 +1,10 @@
-import scrapy
 from scrapy import signals
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 import logging
 
 from .file_savers import failedFileSaverFactory
-from ..items import WebCrawlerItem, FailedItem
+from ..items import WebCrawlerItem
 
 import json
 import os
@@ -17,7 +16,6 @@ EXCLUDE_KEYWORDS = [
 ]
 
 
-# Gère les balises à exclure lors de la récupération du code html
 def build_xpath_exclusions(keywords):
     exclusions = []
     for keyword in keywords:
@@ -32,28 +30,15 @@ def build_xpath_exclusions(keywords):
 
 class WebCrawlerSpider(CrawlSpider):
     name = 'web_crawler'
-    allowed_domains = []  # ouverture à tous les domaines
+    allowed_domains = []
     start_urls = ['https://www.lemonde.fr/', 'https://www.marmiton.org/', 'https://openclassrooms.com/fr/',
                   'https://www.info.gouv.fr/', 'https://data.europa.eu/fr', 'https://fr.finance.yahoo.com/',
                   'https://www.bfmtv.com/']
 
-    # start_urls = [
-    #     'https://httpstat.us/200',  # URL valide code 200
-    #     'https://httpstat.us/404',  # URL avec code 404 pour tester la gestion d'une page non trouvée
-    #     'https://httpstat.us/403',  # URL avec code 403 pour tester l'accès refusé
-    #     'https://httpstat.us/500',  # URL avec code 500 pour tester une erreur serveur
-    #     'https://httpstat.us/502',  # URL avec code 502 pour tester Bad Gateway
-    #     'https://httpstat.us/503',  # URL avec code 503 pour tester Service Unavailable
-    #     'https://httpstat.us/504',  # URL avec code 504 pour tester une erreur de timeout
-    #     'https://httpstat.us/406',  # URL avec code 406 pour tester Not Acceptable
-    #     'https://httpstat.us/408',  # URL avec code 408 pour tester Request Timeout
-    #     'https://httpstat.us/429'   # URL avec code 429 pour tester Too Many Requests
-    # ]
-
     rules = (
         Rule(
             LinkExtractor(
-                deny_extensions=['txt', 'xml', 'pdf', 'zip'],  # Exclusions de certaines extensions
+                deny_extensions=['txt', 'xml', 'pdf', 'zip'],
                 deny=(
                     r'/robots\.txt$',
                     r'/sitemap\.xml$',
@@ -73,21 +58,17 @@ class WebCrawlerSpider(CrawlSpider):
 
     def __init__(self, *args, **kwargs):
         super(WebCrawlerSpider, self).__init__(*args, **kwargs)
-        self.failed_urls = []  # Liste pour stocker les URLs inaccessibles
-        self.processed_urls = set()  # Ensemble pour les URLs déjà traitées
+        self.failed_urls = []
+        self.processed_urls = set()
 
-        # Définir les chemins des fichiers
         data_filepath = os.path.abspath(os.path.join('web_crawler', 'data.jsonl'))
         failed_filepath = os.path.abspath(os.path.join('web_crawler', 'failed.jsonl'))
 
-        # S'assurer que le répertoire existe
         os.makedirs(os.path.dirname(data_filepath), exist_ok=True)
 
-        # Créer les fichiers s'ils n'existent pas
         open(data_filepath, 'a', encoding='utf-8').close()
         open(failed_filepath, 'a', encoding='utf-8').close()
 
-        # Charger les URLs depuis data.jsonl
         if os.path.exists(data_filepath):
             with open(data_filepath, 'r', encoding='utf-8') as file:
                 for line in file:
@@ -96,9 +77,8 @@ class WebCrawlerSpider(CrawlSpider):
                         if 'url' in item:
                             self.processed_urls.add(item['url'])
                     except json.JSONDecodeError:
-                        continue  # Ignorer les lignes mal formées
+                        continue
 
-        # Charger les URLs depuis failed.jsonl
         if os.path.exists(failed_filepath):
             with open(failed_filepath, 'r', encoding='utf-8') as file:
                 for line in file:
@@ -108,7 +88,7 @@ class WebCrawlerSpider(CrawlSpider):
                             self.failed_urls.append((item['failed_url'], item.get('error_code', '')))
                             self.processed_urls.add(item['failed_url'])
                     except json.JSONDecodeError:
-                        continue  # Ignorer les lignes mal formées
+                        continue
 
     def parse_item(self, response):
 
@@ -118,9 +98,9 @@ class WebCrawlerSpider(CrawlSpider):
         self.processed_urls.add(response.url)
 
         if 'robots.txt' in response.url:
-            return  # Ignorer les robots.txt
+            return
 
-        self.log(f"Visited URL: {response.url}", level=logging.INFO)  # Log de l'URL visitée
+        self.log(f"Visited URL: {response.url}", level=logging.INFO)
 
         title = response.xpath('//title/text()').get(default='').strip()
 
@@ -147,24 +127,8 @@ class WebCrawlerSpider(CrawlSpider):
         crawler.signals.connect(spider.closed, signal=signals.spider_closed)
         return spider
 
-    def closed(self, reason):
+    def closed(self):
         if self.failed_urls:
-            # Retirer tout le code lié à la sauvegarde des failed_urls
             self.log("No failed URLs to save here, they are saved in real-time by the middleware.", level=logging.INFO)
         else:
             self.log("No failed URLs.", level=logging.INFO)
-
-        # if self.failed_urls:
-        #     # Afficher les URLs échouées dans les logs
-        #     failed_urls_str = ', '.join([f"({url}, code {code})" for url, code in self.failed_urls])
-        #     self.log(f"Failed URLs: {failed_urls_str}", level=logging.INFO)
-        #
-        #     # Utiliser failedFileSaver pour sauvegarder les URLs échouées
-        #     failed_items = [{"failed_url": url, "error_code": code} for url, code in self.failed_urls]
-        #     for item in failed_items:
-        #         self.failed_file_saver.save(item)
-        #
-        #     if hasattr(self.failed_file_saver, 'close'):
-        #         self.failed_file_saver.close()
-        # else:
-        #     self.log("No failed URLs.", level=logging.INFO)
