@@ -1,0 +1,195 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fafafa;
+    color: #333;
+    line-height: 1.6;
+}
+
+header,
+footer {
+    background: #fefefe;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+header .logo-container,
+footer {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+footer p {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.logo-text {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #3949ab;
+    margin: 10px 0;
+}
+
+.logo-text span {
+    color: #f44336;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.search-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.search-bar {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.search-bar input[type="text"] {
+    border: none;
+    outline: none;
+    padding: 10px 14px;
+    font-size: 16px;
+    min-width: 300px;
+}
+
+.search-bar .search-btn {
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    transition: background 0.2s ease-in-out;
+    border-left: 1px solid #ddd;
+}
+
+.search-bar .search-btn:hover {
+    background: #eee;
+}
+
+.search-bar .search-btn img {
+    width: 20px;
+    height: 20px;
+    filter: invert(35%) brightness(0%);
+}
+
+.results-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+#results p {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #666;
+}
+
+#results ul {
+    list-style: none;
+    margin-top: 10px;
+}
+
+#results li {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+#results li h3 a {
+    color: #3949ab;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.2s ease-in-out;
+}
+
+#results li h3 a:hover {
+    color: #303f9f;
+}
+
+#results li p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-top: 8px;
+}
+
+#pagination {
+    margin-top: 30px;
+    text-align: center;
+}
+
+#pagination button {
+    margin: 0 5px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #3949ab;
+    background-color: #fff;
+    color: #3949ab;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+#pagination button:hover:not(:disabled) {
+    background-color: #3949ab;
+    color: #fff;
+}
+
+#pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-list {
+    display: inline-block;
+}
+
+.page-list button {
+    margin: 0 3px;
+}
+
+.pagination-ellipsis {
+    display: inline-block;
+    margin: 0 5px;
+    color: #3949ab;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 20px;
+    }
+    .search-bar input[type="text"] {
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-bar {
+        flex-direction: row;
+        width: 90%;
+    }
+    .search-bar input[type="text"] {
+        flex: 1;
+    }
+}

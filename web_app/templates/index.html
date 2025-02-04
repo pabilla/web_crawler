@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ESME Search Engine</title>
+    <!-- Lien vers la feuille de style -->
+    <link rel="stylesheet" href="{{ url_for('serve_static', path='styles.css') }}" />
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <!-- Remplace ce texte par un logo si tu en as un -->
+            <h1 class="logo-text">ESME <span>Search</span></h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="search-section">
+            <form id="search-form">
+                <div class="search-bar">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Tapez votre recherche..."
+                        required
+                    />
+                    <button type="submit" class="search-btn">
+                        <img src="{{ url_for('serve_static', path='icons/search-icon.svg') }}" alt="Search" />
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="results-section">
+            <div id="results"></div>
+            <div id="pagination"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2024 - ESME Search Engine</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('serve_static', path='script.js') }}"></script>
+</body>
+</html>

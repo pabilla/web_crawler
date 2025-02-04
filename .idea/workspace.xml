@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="05777fdc-8dc1-4b63-a17e-a21b41bba0d6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Projet ESME.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/TODO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/elastic/config_elastic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/elastic/index_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/final_data/extract_keywords.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/scrapy.cfg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_app/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_app/static/icons/search-icon.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_app/static/script.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_app/static/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_app/templates/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/items.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/middlewares.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/pipelines.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/settings.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/spiders/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/spiders/file_savers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/spiders/main_spider.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/tests/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web_crawler/web_crawler/tests/test_main_spider.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2sZmvSBW3KjwnayD1nKfy7KHb64" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/pierr/OneDrive/Bureau/web_crawler",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="05777fdc-8dc1-4b63-a17e-a21b41bba0d6" name="Changes" comment="" />
+      <created>1738671702212</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1738671702212</updated>
+      <workItem from="1738671703523" duration="270000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
